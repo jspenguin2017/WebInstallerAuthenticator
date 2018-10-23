@@ -40,8 +40,6 @@ const fs = require("fs");
 const http = require("http");
 const https = require("https");
 
-const httpProxy = require("http-proxy");
-
 // -------------------------------------------------------------------------- //
 
 const keyMake = (bytes = 32) => {
@@ -80,11 +78,33 @@ const usage = () => {
     process.exit(1);
 };
 
-// node, file, domain, port
-const domain = process.argv[2];
-const port = process.argv[3];
+// (node, file), domain, target
+const argParse = () => {
+    const out = [];
 
-if (!port)
+    // The domain you control
+    out.push(process.argv[2]);
+
+    // 8080                     - http://localhost:8080
+    // example.com              - http://example.com
+    // example.com:8080         - http://example.com:8080
+    // https://example.com      - https://example.com
+    // https://example.com:4443 - https://example.com:4443
+    let target = process.argv[3];
+
+    if (/^\d+$/.test(target))
+        target = "localhost:" + target;
+    if (!/https?:\/\//.test(target))
+        target = "http://" + target;
+
+    out.push(target);
+
+    return out;
+}
+
+const [domain, target] = argParse();
+
+if (!target)
     usage();
 
 // -------------------------------------------------------------------------- //
@@ -101,24 +121,6 @@ try {
     console.warn("Could not load certificate!");
     console.warn("Starting in INSECURE mode!");
 }
-
-// -------------------------------------------------------------------------- //
-
-// TODO
-const proxyTarget = "example.com";
-
-const proxyOptions = {
-    xfwd: true,
-    secure: true,
-    toProxy: false,
-    hostRewrite: true,
-    autoRewrite: true,
-    cookieDomainRewrite: proxyTarget,
-    proxyTimeout: 2 * 60 * 1000,
-    timeout: 2 * 60 * 1000,
-};
-
-const proxy = httpProxy.createProxyServer(proxyOptions);
 
 // -------------------------------------------------------------------------- //
 
@@ -152,9 +154,7 @@ const requestHandler = (req, res) => {
 
     if (authCheck(req)) {
         console.log("    200 Authenticated");
-        proxy.web(req, res, {
-            target: "http://" + proxyTarget + ":" + port.toString() + req.url,
-        });
+        http.request()
         return;
     }
 

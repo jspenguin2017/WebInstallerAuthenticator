@@ -6,9 +6,7 @@
   "bugs": {
     "url": "https://github.com/jspenguin2017/WebInstallerAuthenticator/issues"
   },
-  "dependencies": {
-    "http-proxy": "^1.17.0"
-  },
+  "dependencies": {},
   "description": "Make sure you win the race",
   "engines": {
     "node": "^10.12.0"
