@@ -52,27 +52,22 @@ const keyMake = (bytes = 32) => {
 };
 
 const key = keyMake();
-const keyBuffer = Buffer.from(key);
+const keyBase64 = Buffer.from("user:" + key).toString("base64");
+const keyBuffer = Buffer.from(keyBase64);
 
 // -------------------------------------------------------------------------- //
 
 const authCookieName = "web-installer-authenticator";
-const authCookieValue = new RegExp(authCookieName + "=([^;]+)");
 
 const authCheck = (req) => {
     assert(req instanceof http.IncomingMessage);
 
-    const cookies = req.headers.cookie;
-    if (!cookies)
+    const auth = req.headers.authorization;
+    if (!auth)
         return false;
 
-    const match = authCookieValue.exec(cookies);
-    if (!match)
-        return false;
-
-    const token = match[1];
+    const [type, token] = auth.split(" ");
     const tokenBuffer = Buffer.from(token);
-
     if (tokenBuffer.length !== keyBuffer.length)
         return false;
 
@@ -121,7 +116,7 @@ const requestValidate = (req, res) => {
     if (req.url.startsWith("/"))
         return true;
 
-    console.log("    400");
+    console.log("    400 Bad request");
     res.writeHead(400);
     res.end();
     return false;
@@ -131,7 +126,7 @@ const requestUpgrade = (req, res) => {
     if (!requestValidate(req, res))
         return;
 
-    console.log("    301");
+    console.log("    301 Upgrade");
     res.writeHead(301, { "Location": "https://" + domain + url });
     res.end();
 };
@@ -141,12 +136,12 @@ const requestHandler = (req, res) => {
         return;
 
     if (authCheck(req)) {
-        console.log("    200");
+        console.log("    200 Authenticated");
         res.end("ok"); // TODO
         return;
     }
 
-    console.log("    401");
+    console.log("    401 Authentication required");
     res.writeHead(401, { "WWW-Authenticate": "basic" });
     res.end();
 };
