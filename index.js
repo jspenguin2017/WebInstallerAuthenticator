@@ -30,7 +30,10 @@
 
 "use strict";
 
+const SEPARATOR = "=".repeat(80);
+
 console.log("Web Installer Authenticator");
+console.log(SEPARATOR);
 
 // -------------------------------------------------------------------------- //
 
@@ -73,13 +76,21 @@ const authCheck = (req) => {
 // -------------------------------------------------------------------------- //
 
 const usage = () => {
-    console.log("Usage:");
-    console.log("    wiauth domain port");
+    console.log("Usage: wiauth domain target");
+    console.log("    domain - Domain that this proxy server is on");
+    console.log("    target - Proxied server, can be:");
+    console.log("        Just a port, default to localhost");
+    console.log("        A domain and optionally a port");
+    console.log("        Protocol, domain, and optionally a port");
+    console.log(
+        "Make sure to set up your firewall so your installer cannot be " +
+        "accessed by other mean!"
+    );
     process.exit(1);
 };
 
-// (node, file), domain, target
 const argParse = () => {
+    // (node, file), domain, target
     const out = [];
 
     // The domain you control
@@ -91,21 +102,27 @@ const argParse = () => {
     // https://example.com      - https://example.com
     // https://example.com:4443 - https://example.com:4443
     let target = process.argv[3];
-
-    if (/^\d+$/.test(target))
-        target = "localhost:" + target;
-    if (!/https?:\/\//.test(target))
-        target = "http://" + target;
-
+    if (target) {
+        if (/^\d+$/.test(target))
+            target = "localhost:" + target;
+        if (!/^https?:\/\//.test(target))
+            target = "http://" + target;
+    }
     out.push(target);
 
     return out;
-}
+};
 
 const [domain, target] = argParse();
 
 if (!target)
     usage();
+
+assert(typeof domain === "string" && typeof target === "string");
+
+console.log("Proxy server : " + domain);
+console.log("Prxied server: " + target);
+console.log(SEPARATOR);
 
 // -------------------------------------------------------------------------- //
 
@@ -116,10 +133,10 @@ try {
     cert.cert = fs.readFileSync(certRoot + "fullchain.pem", "utf8");
     cert.key = fs.readFileSync(certRoot + "privkey.pem", "utf8");
 } catch (err) {
-    console.warn("=".repeat(80));
     console.warn(err.stack);
     console.warn("Could not load certificate!");
     console.warn("Starting in INSECURE mode!");
+    console.log(SEPARATOR);
 }
 
 // -------------------------------------------------------------------------- //
@@ -139,11 +156,11 @@ const requestValidate = (req, res) => {
     return false;
 };
 
-const requestUpgrade = (req, res) => {
+const requestRedirect = (req, res) => {
     if (!requestValidate(req, res))
         return;
 
-    console.log("    301 Upgrade");
+    console.log("    301 Https upgrade");
     res.writeHead(301, { "Location": "https://" + domain + url });
     res.end();
 };
@@ -153,8 +170,13 @@ const requestHandler = (req, res) => {
         return;
 
     if (authCheck(req)) {
-        console.log("    200 Authenticated");
-        http.request()
+        console.log("    200 Normal request");
+
+        // TODO: Remove authorization header?
+
+        // TODO
+        //http.request()
+
         return;
     }
 
@@ -163,6 +185,8 @@ const requestHandler = (req, res) => {
     res.end();
 };
 
+// TODO: Handle websocket
+
 // -------------------------------------------------------------------------- //
 
 const servers = [];
@@ -170,7 +194,7 @@ const servers = [];
 if (cert.key) {
     let server;
 
-    server = http.createServer(requestUpgrade);
+    server = http.createServer(requestRedirect);
     server.listen(80);
     servers.push(server);
 
@@ -187,11 +211,9 @@ if (cert.key) {
 
 // -------------------------------------------------------------------------- //
 
-console.log("=".repeat(80));
 console.log("Authentication for this session:");
 console.log("User: user");
 console.log("Pass: " + key);
-
-console.log("=".repeat(80));
+console.log(SEPARATOR);
 
 // -------------------------------------------------------------------------- //
