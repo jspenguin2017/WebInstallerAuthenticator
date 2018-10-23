@@ -57,8 +57,6 @@ const keyBuffer = Buffer.from(keyBase64);
 
 // -------------------------------------------------------------------------- //
 
-const authCookieName = "web-installer-authenticator";
-
 const authCheck = (req) => {
     assert(req instanceof http.IncomingMessage);
 
@@ -78,16 +76,15 @@ const authCheck = (req) => {
 
 const usage = () => {
     console.log("Usage:");
-    console.log("    wiauth domain");
+    console.log("    wiauth domain port");
     process.exit(1);
 };
 
-// -------------------------------------------------------------------------- //
-
-// node, file, domain
+// node, file, domain, port
 const domain = process.argv[2];
+const port = process.argv[3];
 
-if (!domain)
+if (!port)
     usage();
 
 // -------------------------------------------------------------------------- //
@@ -104,6 +101,24 @@ try {
     console.warn("Could not load certificate!");
     console.warn("Starting in INSECURE mode!");
 }
+
+// -------------------------------------------------------------------------- //
+
+// TODO
+const proxyTarget = "example.com";
+
+const proxyOptions = {
+    xfwd: true,
+    secure: true,
+    toProxy: false,
+    hostRewrite: true,
+    autoRewrite: true,
+    cookieDomainRewrite: proxyTarget,
+    proxyTimeout: 2 * 60 * 1000,
+    timeout: 2 * 60 * 1000,
+};
+
+const proxy = httpProxy.createProxyServer(proxyOptions);
 
 // -------------------------------------------------------------------------- //
 
@@ -137,7 +152,9 @@ const requestHandler = (req, res) => {
 
     if (authCheck(req)) {
         console.log("    200 Authenticated");
-        res.end("ok"); // TODO
+        proxy.web(req, res, {
+            target: "http://" + proxyTarget + ":" + port.toString() + req.url,
+        });
         return;
     }
 
