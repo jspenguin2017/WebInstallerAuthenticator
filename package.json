@@ -1,5 +1,8 @@
 {
   "author": "Hugo Xu (https://github.com/jspenguin2017)",
+  "bin": {
+    "wiauth": "index.js"
+  },
   "bugs": {
     "url": "https://github.com/jspenguin2017/WebInstallerAuthenticator/issues"
   },
