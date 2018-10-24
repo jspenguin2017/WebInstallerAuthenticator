@@ -221,6 +221,18 @@ if (cert.key) {
 
 // -------------------------------------------------------------------------- //
 
+const shutdown = () => {
+    // TODO: Gracefully shutdown server?
+    process.exit(0);
+};
+
+const shutdownSignals = ["SIGHUP", "SIGTERM", "SIGINT"];
+
+for (const sig of shutdownSignals)
+    process.on(sig, shutdown);
+
+// -------------------------------------------------------------------------- //
+
 console.log("Authentication for this session:");
 console.log("User: user");
 console.log("Pass: " + key);
