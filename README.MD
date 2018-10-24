@@ -8,7 +8,7 @@ Make sure you win the race
 
 ```Bash
 sudo npm install --global web-installer-authenticator
-wiauth your-domain.example.com localhost:3000
+sudo wiauth your-domain.example.com localhost:3000
 ```
 
 **Important: make sure your web installer is behind a firewall such that only
