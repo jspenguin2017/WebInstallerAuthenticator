@@ -131,6 +131,19 @@ try {
 
 // -------------------------------------------------------------------------- //
 
+const setupProxyRequest = (req) => {
+    delete req.headers.authorization;
+    req.headers.host = target;
+
+    const options = url.parse("http://" + target + req.url);
+    options.method = req.method;
+    options.headers = req.headers;
+
+    return options;
+};
+
+// -------------------------------------------------------------------------- //
+
 const requestValidate = (req, res) => {
     assert(req instanceof http.IncomingMessage);
     assert(res instanceof http.ServerResponse);
@@ -162,14 +175,7 @@ const requestHandler = (req, res) => {
     if (authCheck(req)) {
         console.log("    200 Normal request");
 
-        delete req.headers.authorization;
-        req.headers.host = target;
-
-        const options = url.parse("http://" + target + req.url);
-        options.method = req.method;
-        options.headers = req.headers;
-
-        const remote = http.request(options, (remoteRes) => {
+        const remote = http.request(setupProxyRequest(req), (remoteRes) => {
             res.writeHead(
                 remoteRes.statusCode,
                 remoteRes.statusMessage,
@@ -192,7 +198,69 @@ const requestHandler = (req, res) => {
     res.end();
 };
 
-// TODO: Handle websocket
+// -------------------------------------------------------------------------- //
+
+const websocketRedirect = (req, socket, head) => {
+    // TODO: Can we upgrade to WebSocket Secure?
+    console.warn("Insecure WebSocket connection");
+    return websocketHandler(req, socket, head);
+};
+
+const websocketHandler = (req, socket, head) => {
+    // Mostly copied from
+    // https://bit.ly/2CAlZZj (GitHub nodejitsu/node-http-proxy)
+
+    console.log("WebSocket request: " + req.url);
+
+    if (
+        req.method !== "GET" ||
+        !req.url.startsWith("/") ||
+        !req.headers.upgrade ||
+        req.headers.upgrade.toLowerCase() !== "websocket"
+    ) {
+        console.log("    400 Bad request");
+        socket.write("HTTP/" + req.httpVersion + " 400 Bad Request\r\n");
+        socket.end("\r\n");
+        return;
+    }
+
+    // https://bit.ly/2yu9X0z (GitHub nodejitsu/node-http-proxy)
+    socket.setTimeout(0);
+    socket.setNoDelay(true);
+    socket.setKeepAlive(true, 0);
+
+    const remote = http.request(setupProxyRequest(req), (remoteRes) => {
+        if (!remoteRes.upgrade) {
+            socket.write(
+                "HTTP/" + remoteRes.httpVersion + " " +
+                res.statusCode + " " +
+                res.statusMessage + "\r\n"
+            );
+            for (const key in remoteRes.headers)
+                socket.write(key + ": " + remoteRes.headers[key] + "\r\n");
+            socket.write("\r\n");
+            remoteRes.pipe(socket);
+        }
+    });
+
+    remote.on("error", () => {
+        socket.destroy();
+    });
+
+    remote.on("upgrade", (remoteRes, remoteSocket, remoteHead) => {
+        socket.write(
+            "HTTP/" + remoteRes.httpVersion + " 101 Switching Protocol",
+        );
+
+        if (head)
+            remoteSocket.write(head);
+        if (remoteHead)
+            socket.write(remoteHead);
+
+        socket.pipe(remoteSocket);
+        remoteSocket.pipe(socket);
+    });
+};
 
 // -------------------------------------------------------------------------- //
 
@@ -203,16 +271,19 @@ if (cert.key) {
 
     server = http.createServer(requestRedirect);
     server.listen(80);
+    server.on("upgrade", websocketRedirect);
     servers.push(server);
 
     server = https.createServer(cert, requestHandler);
     server.listen(443);
+    server.on("upgrade", websocketHandler);
     servers.push(server);
 } else {
     let server;
 
     server = http.createServer(requestHandler);
     server.listen(80);
+    server.on("upgrade", websocketHandler);
     servers.push(server);
 }
 
