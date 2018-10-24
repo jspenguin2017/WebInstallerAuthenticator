@@ -42,6 +42,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
+const url = require("url");
 
 // -------------------------------------------------------------------------- //
 
@@ -162,10 +163,29 @@ const requestHandler = (req, res) => {
     if (authCheck(req)) {
         console.log("    200 Normal request");
 
-        // TODO: Remove authorization header?
+        delete req.headers.authorization;
 
-        // TODO
-        //http.request()
+        const options = url.parse(target + req.url);
+        options.method = req.method;
+        options.headers = req.headers;
+
+        // TODO: Debug
+        console.log(options);
+
+        const remote = http.request(options, (remoteRes) => {
+            res.writeHead(
+                remoteRes.statusCode,
+                remoteRes.statusMessage,
+                remoteRes.headers,
+            );
+
+            remoteRes.pipe(res);
+        });
+
+        remote.on("error", () => {
+            res.destroy();
+        });
+        req.pipe(remote);
 
         return;
     }
