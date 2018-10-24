@@ -97,7 +97,6 @@ const argParse = () => {
     if (target) {
         if (/^\d+$/.test(target))
             target = "localhost:" + target;
-        target = "http://" + target;
     }
     out.push(target);
 
@@ -164,13 +163,11 @@ const requestHandler = (req, res) => {
         console.log("    200 Normal request");
 
         delete req.headers.authorization;
+        req.headers.host = target;
 
-        const options = url.parse(target + req.url);
+        const options = url.parse("http://" + target + req.url);
         options.method = req.method;
         options.headers = req.headers;
-
-        // TODO: Debug
-        console.log(options);
 
         const remote = http.request(options, (remoteRes) => {
             res.writeHead(
