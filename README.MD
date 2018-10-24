@@ -39,7 +39,7 @@ The available options are quite limited, I will expand it as I need them.
 
 ```
 wiauth domain target
-```
 
-- `domain` - Domain or IP address of your server
-- `target` - Target server, must be behind a firewall, should be just a port
+domain - Domain or IP address of your server
+target - Target server, must be behind a firewall, should be just a port
+```
