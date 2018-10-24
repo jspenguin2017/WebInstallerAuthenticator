@@ -27,3 +27,19 @@ administrator, which is unfortunately not guaranteed to be you.
 Web Installer Authenticator will crate a cryptographically secure random key
 to make sure the person tying into the shell is the same person connecting to
 the web installer.
+
+## Features
+
+- Enforces HTTPS when a TLS certificate is available
+- Handles both normal and WebSocket connections
+
+## Options
+
+The available options are quite limited, I will expand it as I need them.
+
+```
+wiauth domain target
+```
+
+`domain` - Domain or IP address of your server
+`target` - Target server, must be behind a firewall, should be just a port
