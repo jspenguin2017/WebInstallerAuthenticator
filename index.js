@@ -132,16 +132,6 @@ try {
 // -------------------------------------------------------------------------- //
 
 const setupProxyRequest = (req) => {
-    // For debugging WebSocket only
-    if (true) {
-        var target;
-
-        if (req.headers.upgrade)
-            target = "echo.websocket.org";
-        else
-            target = "websocket.org";
-    }
-
     delete req.headers.authorization;
     req.headers.host = target;
 
@@ -211,9 +201,15 @@ const requestHandler = (req, res) => {
 // -------------------------------------------------------------------------- //
 
 const websocketRedirect = (req, socket, head) => {
-    // TODO: Can we upgrade to WebSocket Secure?
+    // TODO Can we upgrade to WebSocket Secure?
     console.warn("Insecure WebSocket connection");
     return websocketHandler(req, socket, head);
+};
+
+const websocketWriteHeaders = (headers, socket) => {
+    for (const key in headers)
+        socket.write(key + ": " + headers[key] + "\r\n");
+    socket.write("\r\n");
 };
 
 const websocketHandler = (req, socket, head) => {
@@ -242,36 +238,40 @@ const websocketHandler = (req, socket, head) => {
         return;
     }
 
-    // https://bit.ly/2yu9X0z (GitHub nodejitsu/node-http-proxy)
+    // TODO Find out why are these needed
+    // TODO https://bit.ly/2yu9X0z (GitHub nodejitsu/node-http-proxy)
     socket.setTimeout(0);
     socket.setNoDelay(true);
     socket.setKeepAlive(true, 0);
 
     const remote = http.request(setupProxyRequest(req), (remoteRes) => {
+        // TODO Make sure this is right, it is not in the documentation
+        // TODO I think it should be "!remoteRes.headers.upgrade"
         if (!remoteRes.upgrade) {
+            console.log("    Authenticated, WebSocket upgrade failed");
             socket.write(
                 "HTTP/" + remoteRes.httpVersion + " " +
                 remoteRes.statusCode + " " +
                 remoteRes.statusMessage + "\r\n"
             );
-            for (const key in remoteRes.headers)
-                socket.write(key + ": " + remoteRes.headers[key] + "\r\n");
-            socket.write("\r\n");
+            websocketWriteHeaders(remoteRes.headers, socket);
             remoteRes.pipe(socket);
         }
     });
 
     remote.on("upgrade", (remoteRes, remoteSocket, remoteHead) => {
-        socket.write(
-            "HTTP/" + remoteRes.httpVersion + " 101 Switching Protocol",
-        );
-
         socket.on("error", () => {
             remoteSocket.destroy();
         });
         remoteSocket.on("error", () => {
             socket.destroy();
         });
+
+        console.log("    Authenticated, WebSocket upgrade succeeded");
+        socket.write(
+            "HTTP/" + remoteRes.httpVersion + " 101 Switching Protocol\r\n",
+        );
+        websocketWriteHeaders(remoteRes.headers, socket);
 
         if (head)
             remoteSocket.write(head);
@@ -317,7 +317,7 @@ if (cert.key) {
 // -------------------------------------------------------------------------- //
 
 const shutdown = () => {
-    // TODO: Gracefully shutdown server?
+    // TODO Maybe gracefully shutdown server?
     process.exit(0);
 };
 
