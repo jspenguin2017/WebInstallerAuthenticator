@@ -132,6 +132,16 @@ try {
 // -------------------------------------------------------------------------- //
 
 const setupProxyRequest = (req) => {
+    // For debugging WebSocket only
+    if (true) {
+        var target;
+
+        if (req.headers.upgrade)
+            target = "echo.websocket.org";
+        else
+            target = "websocket.org";
+    }
+
     delete req.headers.authorization;
     req.headers.host = target;
 
@@ -173,7 +183,7 @@ const requestHandler = (req, res) => {
         return;
 
     if (authCheck(req)) {
-        console.log("    200 Normal request");
+        console.log("    Authenticated");
 
         const remote = http.request(setupProxyRequest(req), (remoteRes) => {
             res.writeHead(
@@ -224,6 +234,14 @@ const websocketHandler = (req, socket, head) => {
         return;
     }
 
+    if (!authCheck(req)) {
+        console.log("    401 Authentication required");
+        socket.write("HTTP/" + req.httpVersion + " 401 Unauthorized\r\n");
+        socket.write("WWW-Authenticate: basic\r\n");
+        socket.end("\r\n");
+        return;
+    }
+
     // https://bit.ly/2yu9X0z (GitHub nodejitsu/node-http-proxy)
     socket.setTimeout(0);
     socket.setNoDelay(true);
@@ -233,8 +251,8 @@ const websocketHandler = (req, socket, head) => {
         if (!remoteRes.upgrade) {
             socket.write(
                 "HTTP/" + remoteRes.httpVersion + " " +
-                res.statusCode + " " +
-                res.statusMessage + "\r\n"
+                remoteRes.statusCode + " " +
+                remoteRes.statusMessage + "\r\n"
             );
             for (const key in remoteRes.headers)
                 socket.write(key + ": " + remoteRes.headers[key] + "\r\n");
@@ -243,14 +261,17 @@ const websocketHandler = (req, socket, head) => {
         }
     });
 
-    remote.on("error", () => {
-        socket.destroy();
-    });
-
     remote.on("upgrade", (remoteRes, remoteSocket, remoteHead) => {
         socket.write(
             "HTTP/" + remoteRes.httpVersion + " 101 Switching Protocol",
         );
+
+        socket.on("error", () => {
+            remoteSocket.destroy();
+        });
+        remoteSocket.on("error", () => {
+            socket.destroy();
+        });
 
         if (head)
             remoteSocket.write(head);
@@ -260,6 +281,12 @@ const websocketHandler = (req, socket, head) => {
         socket.pipe(remoteSocket);
         remoteSocket.pipe(socket);
     });
+
+    remote.on("error", () => {
+        socket.destroy();
+    });
+
+    remote.end();
 };
 
 // -------------------------------------------------------------------------- //
