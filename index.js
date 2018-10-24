@@ -78,13 +78,11 @@ const authCheck = (req) => {
 const usage = () => {
     console.log("Usage: wiauth domain target");
     console.log("    domain - Domain that this proxy server is on");
-    console.log("    target - Proxied server, can be:");
-    console.log("        Just a port, default to localhost");
-    console.log("        A domain and optionally a port");
-    console.log("        Protocol, domain, and optionally a port");
+    console.log("    target - Proxied server, a port, a domain, or both");
+    console.log("             Domain defaults to localhost");
     console.log(
-        "Make sure to set up your firewall so your installer cannot be " +
-        "accessed by other mean!"
+        "Make sure to set up your firewall so that your installer cannot be " +
+        "accessed by other means!"
     );
     process.exit(1);
 };
@@ -93,20 +91,12 @@ const argParse = () => {
     // (node, file), domain, target
     const out = [];
 
-    // The domain you control
     out.push(process.argv[2]);
-
-    // 8080                     - http://localhost:8080
-    // example.com              - http://example.com
-    // example.com:8080         - http://example.com:8080
-    // https://example.com      - https://example.com
-    // https://example.com:4443 - https://example.com:4443
     let target = process.argv[3];
     if (target) {
         if (/^\d+$/.test(target))
             target = "localhost:" + target;
-        if (!/^https?:\/\//.test(target))
-            target = "http://" + target;
+        target = "http://" + target;
     }
     out.push(target);
 
