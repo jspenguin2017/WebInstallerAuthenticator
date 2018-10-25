@@ -7,10 +7,9 @@ Make sure you win the race
 ## Motivation
 
 I was recently testing out various software on my Lightsail server, and I am
-disappointed by the poor security of web installers.
-
-A lot of web installers treat the first user to connect as the administrator,
-which is unfortunately not guaranteed to be you.
+disappointed by the poor security of web installers. A lot of them treat the
+first user to connect as the administrator, which is unfortunately not
+guaranteed to be you.
 
 Web Installer Authenticator will crate a cryptographically secure random key
 to make sure the person typing into the terminal is the same person connecting
