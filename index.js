@@ -30,10 +30,9 @@
 
 "use strict";
 
-const SEPARATOR = "=".repeat(80);
+// -------------------------------------------------------------------------- //
 
-console.log("Web Installer Authenticator");
-console.log(SEPARATOR);
+const SEPARATOR = "=".repeat(80);
 
 // -------------------------------------------------------------------------- //
 
@@ -78,13 +77,13 @@ const authCheck = (req) => {
 
 const usage = () => {
     console.log("Usage: wiauth domain target");
-    console.log("    domain - Domain that this proxy server is on");
-    console.log("    target - Proxied server, a port, a domain, or both");
-    console.log("             Domain defaults to localhost");
-    console.log(
-        "Make sure to set up your firewall so that your installer cannot be " +
-        "accessed by other means!"
-    );
+    console.log("");
+    console.log("  domain - domain of this proxy server");
+    console.log("  target - address to web installer");
+    console.log("           a port, a domain, or both");
+    console.log("           domain defaults to localhost");
+    console.log("");
+    console.log("Make sure to secure your installer with firewall");
     process.exit(1);
 };
 
@@ -206,6 +205,8 @@ const websocketRedirect = (req, socket, head) => {
     return websocketHandler(req, socket, head);
 };
 
+// TODO Refactor, handle the first line as well
+// TODO Also, auto-detect status message from status code
 const websocketWriteHeaders = (headers, socket) => {
     for (const key in headers)
         socket.write(key + ": " + headers[key] + "\r\n");
