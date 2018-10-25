@@ -41,3 +41,13 @@ Usage: wiauth domain target
 
 Make sure to secure your installer with firewall
 ```
+
+**It is up to you to secure your installer with a firewall!**
+
+A TLS certificate is highly recommended, you can get free ones from Let's
+Encrypt.
+
+## Contacts
+
+Simply open an issue on GitHub. I will give you further instructions on
+communicating privately if you are reporting a vulnerability.
