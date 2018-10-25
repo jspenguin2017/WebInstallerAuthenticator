@@ -25,7 +25,7 @@ A lot of web installers treat the first user to connect to the installer as
 administrator, which is unfortunately not guaranteed to be you.
 
 Web Installer Authenticator will crate a cryptographically secure random key
-to make sure the person tying into the shell is the same person connecting to
+to make sure the person typing into the shell is the same person connecting to
 the web installer.
 
 ## Features
