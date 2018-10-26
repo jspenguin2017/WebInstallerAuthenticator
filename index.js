@@ -69,6 +69,8 @@ const authCheck = (req) => {
     if (!auth)
         return false;
 
+    delete req.headers.authorization;
+
     const [type, token] = auth.split(" ");
     const tokenBuffer = Buffer.from(token);
     if (tokenBuffer.length !== keyBuffer.length)
@@ -93,9 +95,13 @@ const usage = () => {
 
 const argParse = () => {
     // (node, file), domain, target
+
     const out = [];
 
+    // Domain
     out.push(process.argv[2]);
+
+    // Target
     let target = process.argv[3];
     if (target) {
         if (/^\d+$/.test(target))
@@ -135,7 +141,6 @@ try {
 // -------------------------------------------------------------------------- //
 
 const setupProxyRequest = (req) => {
-    delete req.headers.authorization;
     req.headers.host = target;
 
     const options = url.parse("http://" + target + req.url);
