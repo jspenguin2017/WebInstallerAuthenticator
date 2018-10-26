@@ -32,6 +32,10 @@
 
 // -------------------------------------------------------------------------- //
 
+const DEBUG = false;
+
+// -------------------------------------------------------------------------- //
+
 const SEPARATOR = "=".repeat(80);
 
 // -------------------------------------------------------------------------- //
@@ -53,8 +57,8 @@ const keyMake = (bytes = 32) => {
 };
 
 const key = keyMake();
-const keyBase64 = Buffer.from("user:" + key).toString("base64");
-const keyBuffer = Buffer.from(keyBase64);
+const keyEncoded = Buffer.from("user:" + key).toString("base64");
+const keyBuffer = Buffer.from(keyEncoded);
 
 // -------------------------------------------------------------------------- //
 
