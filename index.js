@@ -132,8 +132,8 @@ if (!target)
 
 assert(typeof domain === "string" && typeof target === "string");
 
-console.log("Proxy server : " + domain);
-console.log("Prxied server: " + target);
+console.log("Proxy server: " + domain);
+console.log("Proxied server: " + target);
 console.log(SEPARATOR);
 
 // -------------------------------------------------------------------------- //
