@@ -37,7 +37,7 @@ Make sure to secure your installer with firewall
 ```
 
 **It is up to you to
-[secure your installer with a firewall!](https://serverfault.com/questions/247176/iptables-only-allow-localhost-access)**
+[secure your installer with a firewall](https://serverfault.com/questions/247176/iptables-only-allow-localhost-access)!**
 
 A TLS certificate is highly recommended, you can get free ones from Let's
 Encrypt.
