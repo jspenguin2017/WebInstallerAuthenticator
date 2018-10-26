@@ -30,22 +30,34 @@
 
 "use strict";
 
-// -------------------------------------------------------------------------- //
-
-const DEBUG = false;
-
-// -------------------------------------------------------------------------- //
-
-const SEPARATOR = "=".repeat(80);
-
-// -------------------------------------------------------------------------- //
-
 const assert = require("assert");
 const crypto = require("crypto");
 const fs = require("fs");
 const http = require("http");
 const https = require("https");
 const url = require("url");
+
+// -------------------------------------------------------------------------- //
+
+const DEBUG = false;
+
+const debugGetHost = (req) => {
+    assert(DEBUG);
+    assert(req instanceof http.IncomingMessage);
+
+    if (
+        req.headers.upgrade.toLowerCase() === "websocket" &&
+        target === "websocket.org"
+    ) {
+        return "echo." + target;
+    }
+
+    return target;
+};
+
+// -------------------------------------------------------------------------- //
+
+const SEPARATOR = "=".repeat(80);
 
 // -------------------------------------------------------------------------- //
 
@@ -141,9 +153,13 @@ try {
 // -------------------------------------------------------------------------- //
 
 const setupProxyRequest = (req) => {
-    req.headers.host = target;
+    assert(req instanceof http.IncomingMessage);
 
-    const options = url.parse("http://" + target + req.url);
+    const host = DEBUG ? debugGetHost(req) : target;
+
+    req.headers.host = host;
+
+    const options = url.parse("http://" + host + req.url);
     options.method = req.method;
     options.headers = req.headers;
 
@@ -196,6 +212,7 @@ const requestHandler = (req, res) => {
         remote.on("error", () => {
             res.destroy();
         });
+
         req.pipe(remote);
 
         return;
