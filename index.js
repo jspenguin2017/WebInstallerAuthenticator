@@ -39,13 +39,14 @@ const url = require("url");
 
 // -------------------------------------------------------------------------- //
 
-const DEBUG = false;
+const DEBUG = true;
 
 const debugGetHost = (req) => {
     assert(DEBUG);
     assert(req instanceof http.IncomingMessage);
 
     if (
+        req.headers.upgrade &&
         req.headers.upgrade.toLowerCase() === "websocket" &&
         target === "websocket.org"
     ) {
@@ -270,38 +271,32 @@ const websocketHandler = (req, socket, head) => {
         return;
     }
 
-    // TODO Find out why are these needed
-    // TODO https://bit.ly/2yu9X0z (GitHub nodejitsu/node-http-proxy)
-    socket.setTimeout(0);
-    socket.setNoDelay(true);
-    socket.setKeepAlive(true, 0);
-
     const remote = http.request(setupProxyRequest(req), (remoteRes) => {
-        // TODO Make sure this is right, it is not in the documentation
-        // TODO I think it should be "!remoteRes.headers.upgrade"
-        if (!remoteRes.upgrade) {
-            console.log("    Authenticated, WebSocket upgrade failed");
+        console.log("    Authenticated, WebSocket upgrade failed");
 
-            socket.write(
-                "HTTP/" + remoteRes.httpVersion + " " +
-                remoteRes.statusCode + " " +
-                remoteRes.statusMessage + "\r\n"
-            );
-            websocketWriteHeaders(remoteRes.headers, socket);
+        socket.on("error", () => {
+            remote.abort();
+        });
 
-            remoteRes.pipe(socket);
-        }
+        socket.write(
+            "HTTP/" + remoteRes.httpVersion + " " +
+            remoteRes.statusCode + " " +
+            remoteRes.statusMessage + "\r\n"
+        );
+        websocketWriteHeaders(remoteRes.headers, socket);
+
+        remoteRes.pipe(socket);
     });
 
     remote.on("upgrade", (remoteRes, remoteSocket, remoteHead) => {
+        console.log("    Authenticated, WebSocket upgrade succeeded");
+
         socket.on("error", () => {
             remoteSocket.destroy();
         });
         remoteSocket.on("error", () => {
             socket.destroy();
         });
-
-        console.log("    Authenticated, WebSocket upgrade succeeded");
 
         socket.write(
             "HTTP/" + remoteRes.httpVersion + " 101 Switching Protocol\r\n",
