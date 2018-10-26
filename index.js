@@ -188,7 +188,7 @@ const requestRedirect = (req, res) => {
         return;
 
     console.log("    301 Https upgrade");
-    res.writeHead(301, { "Location": "https://" + domain + url });
+    res.writeHead(301, { "Location": "https://" + domain + req.url });
     res.end();
 };
 
@@ -227,12 +227,11 @@ const requestHandler = (req, res) => {
 
 const websocketRedirect = (req, socket, head) => {
     // TODO Can we upgrade to WebSocket Secure?
+
     console.warn("Insecure WebSocket connection");
     return websocketHandler(req, socket, head);
 };
 
-// TODO Refactor, handle the first line as well
-// TODO Also, auto-detect status message from status code
 const websocketWriteHeaders = (headers, socket) => {
     for (const key in headers)
         socket.write(key + ": " + headers[key] + "\r\n");
@@ -252,16 +251,22 @@ const websocketHandler = (req, socket, head) => {
         req.headers.upgrade.toLowerCase() !== "websocket"
     ) {
         console.log("    400 Bad request");
+
         socket.write("HTTP/" + req.httpVersion + " 400 Bad Request\r\n");
-        socket.end("\r\n");
+        socket.write("\r\n");
+        socket.end();
+
         return;
     }
 
     if (!authCheck(req)) {
         console.log("    401 Authentication required");
+
         socket.write("HTTP/" + req.httpVersion + " 401 Unauthorized\r\n");
         socket.write("WWW-Authenticate: basic\r\n");
-        socket.end("\r\n");
+        socket.write("\r\n");
+        socket.end();
+
         return;
     }
 
@@ -276,12 +281,14 @@ const websocketHandler = (req, socket, head) => {
         // TODO I think it should be "!remoteRes.headers.upgrade"
         if (!remoteRes.upgrade) {
             console.log("    Authenticated, WebSocket upgrade failed");
+
             socket.write(
                 "HTTP/" + remoteRes.httpVersion + " " +
                 remoteRes.statusCode + " " +
                 remoteRes.statusMessage + "\r\n"
             );
             websocketWriteHeaders(remoteRes.headers, socket);
+
             remoteRes.pipe(socket);
         }
     });
@@ -295,6 +302,7 @@ const websocketHandler = (req, socket, head) => {
         });
 
         console.log("    Authenticated, WebSocket upgrade succeeded");
+
         socket.write(
             "HTTP/" + remoteRes.httpVersion + " 101 Switching Protocol\r\n",
         );
@@ -317,6 +325,8 @@ const websocketHandler = (req, socket, head) => {
 };
 
 // -------------------------------------------------------------------------- //
+
+// TODO Can we proxy WebRTC?
 
 const servers = [];
 

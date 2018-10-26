@@ -15,11 +15,6 @@ Web Installer Authenticator will crate a cryptographically secure random key
 to make sure the person typing into the terminal is the same person connecting
 to the web installer.
 
-## Features
-
-- Handles both normal and WebSocket connections
-- Enforces HTTPS when a TLS certificate is available
-
 ## Installation
 
 You need the latest version of Node.js.
