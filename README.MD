@@ -48,5 +48,8 @@ Encrypt.
 
 ## Contacts
 
-Simply open an issue on GitHub. I will give you further instructions on
-communicating privately if you are reporting a vulnerability.
+Simply open an issue on GitHub.
+
+If you are reporting a vulnerability or otherwise wish to communicate
+privately, you can open a confidential issue
+[on GitLab](https://gitlab.com/xuhaiyang1234/VulnerabilityReports/issues).
