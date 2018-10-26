@@ -48,7 +48,8 @@ Encrypt.
 
 ## Contacts
 
-Simply open an issue on GitHub.
+Simply open an issue
+[on GitHub](https://github.com/jspenguin2017/WebInstallerAuthenticator/issues).
 
 If you are reporting a vulnerability or otherwise wish to communicate
 privately, you can open a confidential issue
