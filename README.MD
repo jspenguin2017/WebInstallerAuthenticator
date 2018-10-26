@@ -36,8 +36,9 @@ Usage: wiauth domain target
 Make sure to secure your installer with firewall
 ```
 
-**It is up to you to secure your installer with
-[a firewall](https://serverfault.com/questions/247176/iptables-only-allow-localhost-access)!**
+**It is up to you to
+[secure your installer](https://serverfault.com/questions/247176/iptables-only-allow-localhost-access)
+with a firewall!**
 
 A TLS certificate is highly recommended, you can get free ones from Let's
 Encrypt.
