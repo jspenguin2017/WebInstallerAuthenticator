@@ -127,10 +127,8 @@ const argParse = () => {
 
 const [domain, target] = argParse();
 
-if (!target)
+if (!domain || !target)
     usage();
-
-assert(typeof domain === "string" && typeof target === "string");
 
 console.log("Proxy server: " + domain);
 console.log("Proxied server: " + target);
@@ -146,7 +144,7 @@ try {
     cert.key = fs.readFileSync(certRoot + "privkey.pem", "utf8");
 } catch (err) {
     console.warn(err.stack);
-    console.warn("Could not load certificate!");
+    console.warn("Could not load certificate");
     console.warn("Starting in INSECURE mode!");
     console.log(SEPARATOR);
 }
@@ -350,6 +348,7 @@ if (cert.key) {
 
 const shutdown = () => {
     // TODO Maybe gracefully shutdown server?
+
     process.exit(0);
 };
 
