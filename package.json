@@ -9,7 +9,7 @@
   "dependencies": {},
   "description": "Make sure you win the race",
   "engines": {
-    "node": "14.20.1"
+    "node": "14.21.1"
   },
   "homepage": "https://github.com/jspenguin2017/WebInstallerAuthenticator",
   "keywords": [
@@ -19,5 +19,5 @@
   "license": "MIT",
   "name": "web-installer-authenticator",
   "repository": "github:jspenguin2017/WebInstallerAuthenticator",
-  "version": "1.0.41"
+  "version": "1.0.42"
 }
