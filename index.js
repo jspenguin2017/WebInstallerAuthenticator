@@ -161,7 +161,7 @@ const setupProxyRequest = (req) => {
 
     req.headers.host = host;
 
-    const options = url.parse("http://" + host + req.url);
+    const options = new url.URL("http://" + host + req.url);
     options.method = req.method;
     options.headers = req.headers;
 
