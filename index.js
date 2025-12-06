@@ -84,7 +84,10 @@ const authCheck = (req) => {
 
     delete req.headers.authorization;
 
-    const [type, token] = auth.split(" ");
+    const [_, token] = auth.split(" ");
+    if (!token)
+        return false;
+
     const tokenBuffer = Buffer.from(token);
     if (tokenBuffer.length !== keyBuffer.length)
         return false;
@@ -273,7 +276,7 @@ const websocketHandler = (req, socket, head) => {
         console.log("    Authenticated, WebSocket upgrade failed");
 
         socket.on("error", () => {
-            remote.abort();
+            remote.destroy();
         });
 
         socket.write(
